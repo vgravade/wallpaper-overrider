@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'edu.sc.seis.launch4j' version '2.4.6'
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
+    id "com.diffplug.gradle.spotless" version "3.23.0"
+}
+
+group 'fr.gravade'
+version '1.0'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'net.java.dev.jna', name: 'jna', version: '5.3.1'
+    compile group: 'net.java.dev.jna', name: 'jna-platform', version: '5.3.1'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+launch4j {
+    manifest = "$projectDir/src/main/resources/app.manifest"
+    outfile = "${project.name}-${project.version}.exe"
+    mainClassName = 'fr.gravade.wallpaperoverrider.App'
+    copyConfigurable = project.tasks.shadowJar.outputs.files
+    jar = "lib/${project.tasks.shadowJar.archiveName}"
+}
+
+spotless {
+    java {
+        licenseHeaderFile 'spotless.license.java'
+        googleJavaFormat()
+    }
+}
