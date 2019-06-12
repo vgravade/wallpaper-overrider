@@ -34,61 +34,78 @@ final class Util {
   private static final String SYSTEM_KEY_PATH =
       "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
 
+  private static final boolean IS_WINDOWS =
+      System.getProperty("os.name").toLowerCase().contains("windows");
+
   static void configureWallpaperInRegistry(Path wallpaper, WallpaperStyle style) {
-    Advapi32Util.registrySetStringValue(
-        HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "Wallpaper", wallpaper.toString());
-    Advapi32Util.registrySetStringValue(
-        HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "WallpaperStyle", Integer.toString(style.getCode()));
+    if (IS_WINDOWS) {
+      Advapi32Util.registrySetStringValue(
+          HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "Wallpaper", wallpaper.toString());
+      Advapi32Util.registrySetStringValue(
+          HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "WallpaperStyle", Integer.toString(style.getCode()));
+    }
   }
 
   static Optional<File> getCurrentForcedWallpaper() {
-    try {
-      String path =
-          Advapi32Util.registryGetStringValue(HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "Wallpaper");
-      File file = new File(path);
-      if (file.exists()) {
-        return Optional.of(file);
+    if (IS_WINDOWS) {
+      try {
+        String path =
+            Advapi32Util.registryGetStringValue(HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "Wallpaper");
+        File file = new File(path);
+        if (file.exists()) {
+          return Optional.of(file);
+        }
+      } catch (Exception ex) {
+        LOGGER.log(Level.WARNING, ex.getMessage(), ex);
       }
-    } catch (Exception ex) {
-      LOGGER.log(Level.WARNING, ex.getMessage(), ex);
     }
     return Optional.empty();
   }
 
   static WallpaperStyle getCurrentForcedWallpaperStyle() {
-    try {
-      String regWallpaperStyle =
-          Advapi32Util.registryGetStringValue(HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "WallpaperStyle");
-      if (regWallpaperStyle != null && !regWallpaperStyle.isEmpty()) {
-        int styleCode = Integer.valueOf(regWallpaperStyle);
-        for (WallpaperStyle ws : WallpaperStyle.values()) {
-          if (ws.getCode() == styleCode) {
-            return ws;
+    if (IS_WINDOWS) {
+      try {
+        String regWallpaperStyle =
+            Advapi32Util.registryGetStringValue(
+                HKEY_CURRENT_USER, SYSTEM_KEY_PATH, "WallpaperStyle");
+        if (regWallpaperStyle != null && !regWallpaperStyle.isEmpty()) {
+          int styleCode = Integer.valueOf(regWallpaperStyle);
+          for (WallpaperStyle ws : WallpaperStyle.values()) {
+            if (ws.getCode() == styleCode) {
+              return ws;
+            }
           }
         }
+      } catch (Exception ex) {
+        LOGGER.log(Level.WARNING, ex.getMessage(), ex);
       }
-    } catch (Exception ex) {
-      LOGGER.log(Level.WARNING, ex.getMessage(), ex);
     }
     return WallpaperStyle.FILL;
   }
 
   static void refreshDesktop() throws IOException, InterruptedException {
-    Process p =
-        Runtime.getRuntime()
-            .exec(
-                System.getenv("SystemRoot")
-                    + "\\System32\\rundll32.exe user32.dll,UpdatePerUserSystemParameters");
-    p.waitFor();
+    if (IS_WINDOWS) {
+      Process p =
+          Runtime.getRuntime()
+              .exec(
+                  System.getenv("SystemRoot")
+                      + "\\System32\\rundll32.exe user32.dll,UpdatePerUserSystemParameters");
+      p.waitFor();
+    }
   }
 
   static File getPicturesDirectory() {
-    try {
-      return new File(
-          Shell32Util.getKnownFolderPath(new Guid.GUID("{33E28130-4E1E-4676-835A-98395C3BC3BB}")));
-    } catch (Win32Exception ex) {
-      LOGGER.log(Level.FINE, ex.getMessage(), ex);
-      return new File(System.getProperty("user.home"));
+    if (IS_WINDOWS) {
+      try {
+        return new File(
+            Shell32Util.getKnownFolderPath(
+                new Guid.GUID("{33E28130-4E1E-4676-835A-98395C3BC3BB}")));
+      } catch (Win32Exception ex) {
+        LOGGER.log(Level.FINE, ex.getMessage(), ex);
+      }
     }
+    File home = new File(System.getProperty("user.home"));
+    File pictures = new File(home, "Pictures");
+    return pictures.isDirectory() ? pictures : home;
   }
 }

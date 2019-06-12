@@ -18,99 +18,49 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package fr.gravade.wallpaperoverrider;
 
 import java.awt.*;
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
+import java.io.File;
 import javax.swing.*;
 
-class ImagePanel extends JPanel implements Runnable {
+class ImagePanel extends JPanel {
 
-  private static final Logger LOGGER = Logger.getLogger(ImagePanel.class.getName());
-  private static final int WIDTH = 300;
-  private static final int HEIGHT = 200;
-
-  private static Image NO_IMAGE;
-
-  static {
-    try {
-      NO_IMAGE = ImageIO.read(App.class.getResource("/Missing-image-232x150.png"));
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-      System.exit(1);
-    }
-  }
-
-  private final WallpaperChoiceDialog dlg;
+  private static final Image NO_IMAGE =
+      Toolkit.getDefaultToolkit().getImage(App.class.getResource("/Missing-image-232x150.png"));
 
   private Image image = NO_IMAGE;
 
-  ImagePanel(WallpaperChoiceDialog dlg) {
-    this.dlg = dlg;
+  ImagePanel() {
     setBackground(Color.WHITE);
-    setPreferredSize(new Dimension(WIDTH, HEIGHT));
+    setPreferredSize(new Dimension(300, 200));
   }
 
-  void setImage(Image img) {
-    new ScaleImageWorker(img).execute();
+  void setImage(File imageFile) {
+    setImage(Toolkit.getDefaultToolkit().getImage(imageFile.getAbsolutePath()));
+  }
+
+  void setImage(Image image) {
+    this.image = image;
+    paintImmediately(0, 0, getWidth(), getHeight());
   }
 
   @Override
   protected void paintComponent(Graphics g) {
     super.paintComponent(g);
     if (image != null) {
-      int imgWidth = image.getWidth(this);
-      int imgHeight = image.getHeight(this);
-      g.drawImage(image, 0, 0, imgWidth, imgHeight, this);
-    }
-  }
-
-  @Override
-  public void run() {}
-
-  private class ScaleImageWorker extends SwingWorker<Image, Void> {
-    private final Image rawImage;
-
-    ScaleImageWorker(Image rawImage) {
-      this.rawImage = rawImage;
-    }
-
-    @Override
-    protected Image doInBackground() {
       int imgWidth, imgHeight;
-      double contRatio = (double) WIDTH / (double) HEIGHT;
-      double imgRatio = (double) rawImage.getWidth(null) / (double) rawImage.getHeight(null);
+      double contRatio = (double) getWidth() / (double) getHeight();
+      double imgRatio = (double) image.getWidth(null) / (double) image.getHeight(null);
 
       // width limited
       if (contRatio < imgRatio) {
-        imgWidth = WIDTH;
-        imgHeight = (int) (WIDTH / imgRatio);
+        imgWidth = getWidth();
+        imgHeight = (int) (getWidth() / imgRatio);
 
         // height limited
       } else {
-        imgWidth = (int) (HEIGHT * imgRatio);
-        imgHeight = HEIGHT;
+        imgWidth = (int) (getHeight() * imgRatio);
+        imgHeight = getHeight();
       }
-      return rawImage.getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
-    }
-
-    @Override
-    protected void done() {
-      try {
-        image = get();
-      } catch (InterruptedException | ExecutionException ex) {
-        ex.printStackTrace();
-        image = null;
-        JOptionPane.showMessageDialog(
-            ImagePanel.this,
-            ex.getLocalizedMessage(),
-            App.I18N.getString("error"),
-            JOptionPane.ERROR_MESSAGE);
-      } finally {
-        paintImmediately(0, 0, getWidth(), getHeight());
-        dlg.setLoading(false);
-      }
+      g.drawImage(image, 0, 0, imgWidth, imgHeight, this);
     }
   }
 }

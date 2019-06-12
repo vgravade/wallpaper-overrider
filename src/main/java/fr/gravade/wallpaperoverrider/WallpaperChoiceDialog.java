@@ -23,10 +23,8 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.*;
 
 class WallpaperChoiceDialog extends JFrame implements ActionListener {
@@ -39,9 +37,7 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
   private static final Font NORMAL_FONT = BASE_FONT.deriveFont(15.0f);
   private static final Font ITALIC_FONT = BASE_FONT.deriveFont(Font.ITALIC);
 
-  private final ImagePanel forcedImagePanel = new ImagePanel(this);
-  private final JLabel loadingLabel =
-      createLabelWithCustomFont(App.I18N.getString("loading"), ITALIC_FONT);
+  private final ImagePanel forcedImagePanel = new ImagePanel();
   private final JButton browseButton = new JButton(App.I18N.getString("browse"));
   private final JComboBox<WallpaperStyle> styleComboBox = new JComboBox<>(WallpaperStyle.values());
   private final JButton applyButton = new JButton(App.I18N.getString("apply"));
@@ -63,7 +59,6 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
 
     JPanel wallpaperPanel = new JPanel(new BorderLayout(5, 20));
     wallpaperPanel.setOpaque(false);
-    wallpaperPanel.add(loadingLabel, BorderLayout.NORTH);
     wallpaperPanel.add(forcedImagePanel, BorderLayout.WEST);
     wallpaperPanel.add(Box.createHorizontalGlue(), BorderLayout.CENTER);
     wallpaperPanel.add(browsePanel, BorderLayout.SOUTH);
@@ -119,14 +114,8 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
         createLabelWithCustomFont(App.I18N.getString("should_logout"), ITALIC_FONT), gc);
 
     setContentPane(contentPanel);
-    loadingLabel.setVisible(false);
 
-    Util.getCurrentForcedWallpaper()
-        .ifPresent(
-            file -> {
-              setLoading(true);
-              new LoadImageWorker(file).execute();
-            });
+    Util.getCurrentForcedWallpaper().ifPresent(file -> forcedImagePanel.setImage(file));
 
     styleComboBox.setSelectedItem(Util.getCurrentForcedWallpaperStyle());
 
@@ -138,19 +127,6 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     applyButton.addActionListener(this);
     closeButton.addActionListener(this);
     applyButton.setEnabled(false);
-  }
-
-  void setLoading(boolean loading) {
-    browseButton.setEnabled(!loading);
-    styleComboBox.setEnabled(!loading);
-    loadingLabel.setVisible(loading);
-    if (!loading) {
-      if (initialLoading) {
-        initialLoading = false;
-      } else {
-        applyButton.setEnabled(true);
-      }
-    }
   }
 
   private void forceFontForComponent(JComponent... components) {
@@ -215,38 +191,9 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     chooser.showOpenDialog(browseButton);
     File newFile = chooser.getSelectedFile();
     if (newFile != null && !newFile.equals(selectedFile)) {
-      setLoading(true);
-      new LoadImageWorker(newFile).execute();
-    }
-  }
-
-  private class LoadImageWorker extends SwingWorker<Image, Void> {
-
-    private final File file;
-
-    LoadImageWorker(File file) {
-      this.file = file;
-    }
-
-    @Override
-    protected Image doInBackground() throws Exception {
-      return ImageIO.read(file);
-    }
-
-    @Override
-    protected void done() {
-      try {
-        forcedImagePanel.setImage(get());
-        selectedFile = file;
-      } catch (InterruptedException | ExecutionException ex) {
-        LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-        setLoading(false);
-        JOptionPane.showMessageDialog(
-            WallpaperChoiceDialog.this,
-            ex.getLocalizedMessage(),
-            App.I18N.getString("error"),
-            JOptionPane.ERROR_MESSAGE);
-      }
+      selectedFile = newFile;
+      applyButton.setEnabled(true);
+      forcedImagePanel.setImage(newFile);
     }
   }
 }
