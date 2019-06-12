@@ -115,7 +115,12 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
 
     setContentPane(contentPanel);
 
-    Util.getCurrentForcedWallpaper().ifPresent(file -> forcedImagePanel.setImage(file));
+    Util.getCurrentForcedWallpaper()
+        .ifPresent(
+            file -> {
+              selectedFile = file;
+              forcedImagePanel.setImage(file);
+            });
 
     styleComboBox.setSelectedItem(Util.getCurrentForcedWallpaperStyle());
 
@@ -182,18 +187,19 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
   }
 
   private void onBrowseButton() {
-    JFileChooser chooser = new JFileChooser();
+    FileDialog fileDialog = new FileDialog(this, App.I18N.getString("open_image"));
+    fileDialog.setMode(FileDialog.LOAD);
     if (selectedFile != null) {
-      chooser.setSelectedFile(selectedFile);
+      fileDialog.setDirectory(selectedFile.getParent());
     } else {
-      chooser.setCurrentDirectory(Util.getPicturesDirectory());
+      fileDialog.setDirectory(Util.getPicturesDirectory().getAbsolutePath());
     }
-    chooser.showOpenDialog(browseButton);
-    File newFile = chooser.getSelectedFile();
-    if (newFile != null && !newFile.equals(selectedFile)) {
-      selectedFile = newFile;
+    fileDialog.setFile("*.jpg;*.jpeg;*.png;*.bmp");
+    fileDialog.setVisible(true);
+    if (fileDialog.getFile() != null) {
+      selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
       applyButton.setEnabled(true);
-      forcedImagePanel.setImage(newFile);
+      forcedImagePanel.setImage(selectedFile);
     }
   }
 }

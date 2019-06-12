@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'fr.gravade'
-version '1.0'
+version '1.1'
 
 mainClassName =  'fr.gravade.wallpaperoverrider.App'
 sourceCompatibility = JavaVersion.VERSION_1_8
