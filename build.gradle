@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'fr.gravade'
-version '1.1'
+version '1.2'
 
 mainClassName =  'fr.gravade.wallpaperoverrider.App'
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -32,7 +32,7 @@ launch4j {
 
 spotless {
     java {
-        licenseHeaderFile 'spotless.license.java'
+        licenseHeaderFile 'spotless/license.java'
         googleJavaFormat()
     }
 }

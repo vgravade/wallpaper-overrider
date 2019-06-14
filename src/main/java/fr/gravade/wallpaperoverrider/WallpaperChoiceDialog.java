@@ -1,19 +1,20 @@
 /*
-Wallpaper Overrider
-Copyright (C) 2019  Vincent Gravade
+Copyright (C) 2019 Vincent Gravade.
 
-This program is free software: you can redistribute it and/or modify
+This file is part of Wallpaper Overrider.
+
+Wallpaper Overrider is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
+Wallpaper Overrider is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
+along with Wallpaper Overrider.  If not, see <https://www.gnu.org/licenses/>.
  */
 package fr.gravade.wallpaperoverrider;
 
@@ -21,8 +22,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
@@ -35,7 +36,6 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
 
   private static final Font HEADER_FONT = BASE_FONT.deriveFont(22.0f);
   private static final Font NORMAL_FONT = BASE_FONT.deriveFont(15.0f);
-  private static final Font ITALIC_FONT = BASE_FONT.deriveFont(Font.ITALIC);
 
   private final ImagePanel forcedImagePanel = new ImagePanel();
   private final JButton browseButton = new JButton(App.I18N.getString("browse"));
@@ -43,7 +43,6 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
   private final JButton applyButton = new JButton(App.I18N.getString("apply"));
   private final JButton closeButton = new JButton(App.I18N.getString("close"));
 
-  private boolean initialLoading = true;
   private File selectedFile = null;
 
   WallpaperChoiceDialog() {
@@ -51,6 +50,8 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
     forceFontForComponent(browseButton, styleComboBox, applyButton, closeButton);
+
+    styleComboBox.setRenderer(new WallpaperStyleRenderer());
 
     JPanel browsePanel = new JPanel(new BorderLayout(5, 0));
     browsePanel.setOpaque(false);
@@ -109,10 +110,6 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     gc.insets = new Insets(0, 0, 20, 0);
     contentPanel.add(buttonsPanel, gc);
 
-    gc.gridy++;
-    contentPanel.add(
-        createLabelWithCustomFont(App.I18N.getString("should_logout"), ITALIC_FONT), gc);
-
     setContentPane(contentPanel);
 
     Util.getCurrentForcedWallpaper()
@@ -161,16 +158,13 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
   }
 
   private void onApplyButton() {
-
-    Path image = selectedFile.toPath();
-    if (Files.isRegularFile(image) && Files.exists(image)) {
+    if (selectedFile.exists() && selectedFile.isFile()) {
       try {
         WallpaperStyle style =
             styleComboBox.getSelectedItem() != null
                 ? (WallpaperStyle) styleComboBox.getSelectedItem()
                 : WallpaperStyle.FILL;
-        Util.configureWallpaperInRegistry(image, style);
-        Util.refreshDesktop();
+        Util.updateForcedWallpaper(selectedFile, style);
         applyButton.setEnabled(false);
       } catch (Exception ex) {
         LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
@@ -187,8 +181,7 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
   }
 
   private void onBrowseButton() {
-    FileDialog fileDialog = new FileDialog(this, App.I18N.getString("open_image"));
-    fileDialog.setMode(FileDialog.LOAD);
+    FileDialog fileDialog = new FileDialog(this, App.I18N.getString("open_image"), FileDialog.LOAD);
     if (selectedFile != null) {
       fileDialog.setDirectory(selectedFile.getParent());
     } else {
@@ -200,6 +193,31 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
       selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
       applyButton.setEnabled(true);
       forcedImagePanel.setImage(selectedFile);
+    }
+  }
+
+  public class WallpaperStyleRenderer extends DefaultListCellRenderer {
+    private Map<WallpaperStyle, ImageIcon> iconMap = new HashMap<>();
+
+    WallpaperStyleRenderer() {
+      iconMap.put(
+          WallpaperStyle.CENTER, new ImageIcon(getClass().getResource("/images/center.png")));
+      iconMap.put(WallpaperStyle.TILE, new ImageIcon(getClass().getResource("/images/tile.png")));
+      iconMap.put(
+          WallpaperStyle.STRETCH, new ImageIcon(getClass().getResource("/images/stretch.png")));
+      iconMap.put(WallpaperStyle.FIT, new ImageIcon(getClass().getResource("/images/fit.png")));
+      iconMap.put(WallpaperStyle.FILL, new ImageIcon(getClass().getResource("/images/fill.png")));
+      iconMap.put(WallpaperStyle.SPAN, new ImageIcon(getClass().getResource("/images/span.png")));
+    }
+
+    @Override
+    public Component getListCellRendererComponent(
+        JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+      super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+      WallpaperStyle style = (WallpaperStyle) value;
+      this.setText(style.toString());
+      this.setIcon(iconMap.get(style));
+      return this;
     }
   }
 }
