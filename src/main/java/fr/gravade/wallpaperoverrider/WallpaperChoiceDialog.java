@@ -22,7 +22,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +49,26 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
 
   WallpaperChoiceDialog() {
     super("Wallpaper Overrider");
+
+    List<Image> icons = new ArrayList<>();
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-16.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-24.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-32.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-48.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-64.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-128.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-256.png")));
+    icons.add(
+        Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/logo/logo-512.png")));
+    setIconImages(icons);
+
     setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
     forceFontForComponent(browseButton, styleComboBox, applyButton, closeButton);
