@@ -134,16 +134,18 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
 
     setContentPane(contentPanel);
 
+    WallpaperStyle currentStyle = Util.getCurrentForcedWallpaperStyle();
+    styleComboBox.setSelectedItem(currentStyle);
+    styleComboBox.setEnabled(false);
+    forcedImagePanel.setStyle(currentStyle);
+
     Util.getCurrentForcedWallpaper()
         .ifPresent(
             file -> {
               selectedFile = file;
               forcedImagePanel.setImage(file);
+              styleComboBox.setEnabled(true);
             });
-
-    WallpaperStyle currentStyle = Util.getCurrentForcedWallpaperStyle();
-    styleComboBox.setSelectedItem(currentStyle);
-    forcedImagePanel.setStyle(currentStyle);
 
     pack();
     setResizable(false);
@@ -217,6 +219,7 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     if (fileDialog.getFile() != null) {
       selectedFile = new File(fileDialog.getDirectory(), fileDialog.getFile());
       applyButton.setEnabled(true);
+      styleComboBox.setEnabled(true);
       forcedImagePanel.setImage(selectedFile);
     }
   }

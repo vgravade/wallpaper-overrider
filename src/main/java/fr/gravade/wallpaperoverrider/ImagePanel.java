@@ -28,9 +28,6 @@ class ImagePanel extends JPanel {
   private static final Image MONITOR =
       Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/monitor.png"));
 
-  private static final Image NO_IMAGE =
-      Toolkit.getDefaultToolkit().getImage(App.class.getResource("/images/missing.png"));
-
   private static final int MONITOR_X = 12;
   private static final int MONITOR_Y = 12;
   private static final int MONITOR_WIDTH = 316;
@@ -40,7 +37,7 @@ class ImagePanel extends JPanel {
   private static final double STD_SCALE_FACTOR =
       (double) MONITOR_WIDTH / (double) MONITOR_STD_WIDTH;
 
-  private Image image = NO_IMAGE;
+  private Image image;
   private WallpaperStyle style = WallpaperStyle.FILL;
 
   ImagePanel() {
@@ -67,14 +64,14 @@ class ImagePanel extends JPanel {
     super.paintComponent(g);
     g.drawImage(MONITOR, 0, 0, MONITOR.getWidth(this), MONITOR.getHeight(this), this);
 
-    double imgRatio = (double) image.getWidth(this) / (double) image.getHeight(this);
-    int imgWidth = MONITOR_WIDTH;
-    int imgHeight = MONITOR_HEIGHT;
-    int x = MONITOR_X;
-    int y = MONITOR_Y;
-    Image img = image;
-
     if (image != null) {
+      double imgRatio = (double) image.getWidth(this) / (double) image.getHeight(this);
+      int imgWidth = MONITOR_WIDTH;
+      int imgHeight = MONITOR_HEIGHT;
+      int x = MONITOR_X;
+      int y = MONITOR_Y;
+      Image img = image;
+
       switch (style) {
         case CENTER:
           img = getCenterImage();
