@@ -67,7 +67,7 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     JPanel wallpaperStylePanel = new JPanel(new BorderLayout(5, 0));
     wallpaperStylePanel.setOpaque(false);
     wallpaperStylePanel.add(styleComboBox, BorderLayout.CENTER);
-    wallpaperStylePanel.add(Box.createHorizontalStrut(500), BorderLayout.EAST);
+    wallpaperStylePanel.add(Box.createHorizontalStrut(300), BorderLayout.EAST);
 
     JPanel buttonsPanel = new JPanel();
     buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS));
@@ -78,7 +78,7 @@ class WallpaperChoiceDialog extends JFrame implements ActionListener {
     JPanel contentPanel = new JPanel(new GridBagLayout());
     contentPanel.setOpaque(true);
     contentPanel.setBackground(Color.WHITE);
-    contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 150));
+    contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 50));
 
     GridBagConstraints gc = new GridBagConstraints();
     gc.anchor = GridBagConstraints.BASELINE_LEADING;
